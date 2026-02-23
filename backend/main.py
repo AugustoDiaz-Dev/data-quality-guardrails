@@ -7,9 +7,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
-from backend.pipeline.graph import build_graph
-from backend.utils.csv_utils import read_csv_bytes
-from backend.utils.ai_utils import generate_ai_insights
+try:
+    from backend.pipeline.graph import build_graph
+    from backend.utils.csv_utils import read_csv_bytes
+    from backend.utils.ai_utils import generate_ai_insights
+except ImportError:
+    from pipeline.graph import build_graph
+    from utils.csv_utils import read_csv_bytes
+    from utils.ai_utils import generate_ai_insights
 
 load_dotenv()
 

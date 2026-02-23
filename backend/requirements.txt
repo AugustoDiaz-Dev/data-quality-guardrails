@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pandas
+numpy
+langgraph
+langchain
+pydantic
+python-multipart
+openai

@@ -5,14 +5,24 @@ from typing import Any, Dict, Optional, TypedDict
 import pandas as pd
 from langgraph.graph import END, StateGraph
 
-from backend.utils.stats_utils import (
-    detect_drift,
-    detect_schema_violations,
-    infer_column_type,
-    profile_dataframe,
-    recommend_fixes,
-    summarize_report,
-)
+try:
+    from backend.utils.stats_utils import (
+        detect_drift,
+        detect_schema_violations,
+        infer_column_type,
+        profile_dataframe,
+        recommend_fixes,
+        summarize_report,
+    )
+except ImportError:
+    from utils.stats_utils import (
+        detect_drift,
+        detect_schema_violations,
+        infer_column_type,
+        profile_dataframe,
+        recommend_fixes,
+        summarize_report,
+    )
 
 
 class PipelineState(TypedDict, total=False):
