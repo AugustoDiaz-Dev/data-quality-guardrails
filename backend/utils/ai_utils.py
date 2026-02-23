@@ -47,7 +47,15 @@ def generate_ai_insights(report: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         return {"status": "error", "reason": f"OpenAI SDK not available: {exc}"}
 
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    default_model = "gpt-4o-mini"
+    fallback_models = [
+        "gpt-4o-mini",
+        "gpt-4.1-mini",
+        "gpt-4.1-nano",
+        "gpt-4o",
+    ]
+    configured = os.getenv("OPENAI_MODEL", default_model)
+    model_candidates = [configured] + [m for m in fallback_models if m != configured]
     client = OpenAI(api_key=api_key)
     payload = _compact_report(report)
     system = (
@@ -72,17 +80,22 @@ def generate_ai_insights(report: Dict[str, Any]) -> Dict[str, Any]:
         },
     }
 
-    try:
-        response = client.responses.create(
-            model=model,
-            input=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": json.dumps(user)},
-            ],
-        )
-        text = response.output_text
-        data = json.loads(text)
-        data["status"] = "ok"
-        return data
-    except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "reason": str(exc)}
+    last_error = None
+    for model in model_candidates:
+        try:
+            response = client.responses.create(
+                model=model,
+                input=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": json.dumps(user)},
+                ],
+            )
+            text = response.output_text
+            data = json.loads(text)
+            data["status"] = "ok"
+            data["model_used"] = model
+            return data
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+
+    return {"status": "error", "reason": str(last_error) if last_error else "Unknown error"}
