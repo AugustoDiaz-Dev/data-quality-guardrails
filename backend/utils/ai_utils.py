@@ -83,14 +83,15 @@ def generate_ai_insights(report: Dict[str, Any]) -> Dict[str, Any]:
     last_error = None
     for model in model_candidates:
         try:
-            response = client.responses.create(
+            response = client.chat.completions.create(
                 model=model,
-                input=[
+                messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": json.dumps(user)},
                 ],
+                response_format={"type": "json_object"},
             )
-            text = response.output_text
+            text = response.choices[0].message.content
             data = json.loads(text)
             data["status"] = "ok"
             data["model_used"] = model
