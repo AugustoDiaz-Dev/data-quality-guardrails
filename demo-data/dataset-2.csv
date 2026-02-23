@@ -1,0 +1,11 @@
+order_id,customer_id,amount,order_date,status,region,channel,priority
+1201,C301,45.00,2025-03-01,complete,North,web,high
+1202,C302,9999.99,2025-03-01,complete,West,partner,high
+1203,C303,12.50,2025-03-02,pending,East,web,low
+1204,C304,18.00,2025-03-02,complete,South,store,medium
+1205,C305,0,2025-03-03,canceled,South,web,low
+1206,C306,75.50,not_a_date,complete,North,store,medium
+1207,C307,35.00,2025-03-04,complete,West,store,medium
+1208,C308,,2025-03-04,refunded,East,web,high
+1209,C309,49.99,2025-03-05,complete,East,web,low
+1210,C310,250.00,2025-03-06,complete,North,partner,high

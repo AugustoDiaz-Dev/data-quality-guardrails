@@ -1,0 +1,8 @@
+order_id,customer_id,amount,order_date,status,region
+9001,C101,110.00,2024-12-01,complete,North
+9002,C102,95.50,2024-12-02,complete,West
+9003,C103,60.00,2024-12-03,complete,East
+9004,C104,180.00,2024-12-03,complete,South
+9005,C105,30.00,2024-12-04,complete,North
+9006,C106,75.00,2024-12-05,complete,West
+9007,C107,50.00,2024-12-06,complete,East

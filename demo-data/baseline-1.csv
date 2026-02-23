@@ -1,0 +1,8 @@
+order_id,customer_id,amount,order_date,status,region,channel
+8001,C201,20.00,2024-11-01,complete,North,web
+8002,C202,35.00,2024-11-01,complete,West,store
+8003,C203,55.00,2024-11-02,complete,East,web
+8004,C204,90.00,2024-11-02,complete,South,partner
+8005,C205,15.00,2024-11-03,complete,North,web
+8006,C206,60.00,2024-11-03,complete,West,store
+8007,C207,70.00,2024-11-04,complete,East,web

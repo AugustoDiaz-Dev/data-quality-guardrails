@@ -1,0 +1,11 @@
+order_id,customer_id,amount,order_date,status,region,channel
+1101,C011,22.50,2025-02-01,complete,North,web
+1102,C012,18.00,2025-02-01,complete,West,store
+1103,C013,15.75,2025-02-02,complete,East,web
+1104,C014,250.00,2025-02-02,complete,South,partner
+1105,C015,5.00,2025-02-03,complete,South,web
+1106,C016,75.20,2025-02-03,refunded,North,store
+1107,C017,,2025-02-04,complete,West,web
+1108,C018,9000,2025-02-04,complete,East,partner
+1109,C019,12.99,not_a_date,complete,North,web
+1110,C020,45.00,2025-02-05,canceled,South,store

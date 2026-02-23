@@ -1,0 +1,8 @@
+order_id,customer_id,amount,order_date,status,region,channel,priority
+7001,C401,40.00,2024-10-01,complete,North,web,medium
+7002,C402,32.00,2024-10-01,complete,West,store,low
+7003,C403,28.00,2024-10-02,complete,East,web,low
+7004,C404,65.00,2024-10-02,complete,South,partner,medium
+7005,C405,55.00,2024-10-03,complete,North,web,medium
+7006,C406,48.00,2024-10-03,complete,West,store,low
+7007,C407,52.00,2024-10-04,complete,East,web,low

@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Quality Guardrails</title>
+    <script src="config.js"></script>
+    <style>
+      :root {
+        --bg: #0f1b2d;
+        --panel: #15233b;
+        --accent: #f4b860;
+        --text: #e8eef8;
+        --muted: #a8b4c7;
+      }
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at top, #1b2d4a, var(--bg));
+        color: var(--text);
+      }
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 24px;
+      }
+      header {
+        margin-bottom: 24px;
+      }
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+      .panel {
+        background: var(--panel);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        margin: 16px 0;
+      }
+      .kpi {
+        background: #1b2a44;
+        border-radius: 10px;
+        padding: 12px;
+      }
+      .kpi-label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .kpi-value {
+        font-size: 20px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+      .charts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+      }
+      .agents {
+        margin-top: 16px;
+        display: grid;
+        gap: 12px;
+      }
+      .agent-card {
+        background: #111e36;
+        border-radius: 10px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .agent-title {
+        font-weight: 700;
+        margin: 0 0 6px 0;
+        font-size: 14px;
+      }
+      .agent-sub {
+        color: var(--muted);
+        font-size: 12px;
+        margin: 0 0 8px 0;
+      }
+      .agent-body {
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .agent-body ul {
+        margin: 6px 0 0 16px;
+      }
+      .chart-card {
+        background: #0f1c33;
+        border-radius: 10px;
+        padding: 12px;
+      }
+      .chart-empty {
+        color: var(--muted);
+        font-size: 12px;
+        padding: 8px;
+      }
+      .chart-title {
+        margin: 0 0 8px 0;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      canvas {
+        width: 100%;
+        height: 140px;
+        display: block;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      input[type="file"] {
+        color: var(--text);
+      }
+      button {
+        background: var(--accent);
+        border: none;
+        color: #1a1a1a;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-secondary {
+        background: #7aa2f7;
+        color: #0b1424;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .section-title {
+        margin: 16px 0 8px 0;
+        font-size: 14px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      pre {
+        white-space: pre-wrap;
+        background: #0b1424;
+        padding: 16px;
+        border-radius: 8px;
+        overflow: auto;
+      }
+      .summary {
+        margin-top: 12px;
+        padding: 12px;
+        background: #1f2f49;
+        border-radius: 8px;
+      }
+      .issues {
+        margin-top: 12px;
+        background: #0b1424;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 13px;
+      }
+      .ai {
+        margin-top: 16px;
+        background: #0b1424;
+        padding: 12px;
+        border-radius: 8px;
+      }
+      .ai h3 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+      }
+      .ai-section {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .ai pre {
+        white-space: pre-wrap;
+        background: #0f1c33;
+        padding: 10px;
+        border-radius: 8px;
+        margin: 6px 0 0 0;
+      }
+      .ai table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+        font-size: 12px;
+      }
+      .ai th,
+      .ai td {
+        text-align: left;
+        padding: 6px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      details {
+        margin-top: 12px;
+        background: #0b1424;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .json-box {
+        max-height: 260px;
+        overflow: auto;
+        margin-top: 10px;
+        background: #0f1c33;
+        border-radius: 8px;
+        padding: 10px;
+      }
+      footer {
+        margin-top: 32px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+        padding-bottom: 16px;
+      }
+      .issues ul {
+        margin: 8px 0 0 16px;
+      }
+      .tooltip {
+        position: absolute;
+        background: #0b1424;
+        color: var(--text);
+        padding: 6px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.1s ease;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 20;
+      }
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        display: inline-block;
+        animation: spin 0.8s linear infinite;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 12, 24, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 30;
+      }
+      .modal.open {
+        display: flex;
+      }
+      .modal-content {
+        background: #0f1c33;
+        border-radius: 12px;
+        width: min(900px, 95vw);
+        max-height: 80vh;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .modal-body {
+        padding: 12px 16px;
+        overflow: auto;
+      }
+      .modal-body table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      .modal-body th,
+      .modal-body td {
+        text-align: left;
+        padding: 6px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><a href="index.html" style="color: inherit; text-decoration: none;">Data Quality Guardrails</a></h1>
+        <p>Upload a CSV, run the pipeline, and review the report.</p>
+      </header>
+
+      <div class="panel">
+        <div class="row">
+          <label>Dataset CSV: <input id="dataset" type="file" accept=".csv" /></label>
+          <label>Baseline CSV (optional): <input id="baseline" type="file" accept=".csv" /></label>
+          <button id="run">Run Analysis<span id="spinner" class="spinner" style="display: none;"></span></button>
+          <button id="viewTable" class="btn-secondary" disabled>View Data Table</button>
+        </div>
+        <div id="kpis" class="kpis"></div>
+        <div id="summary" class="summary"></div>
+        <div class="charts">
+          <div class="chart-card">
+            <div class="chart-title">Missing values by column (%)</div>
+            <canvas id="missingChart" width="500" height="140"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Schema violations by column (%)</div>
+            <canvas id="invalidChart" width="500" height="140"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Outliers by column (count)</div>
+            <canvas id="outlierChart" width="500" height="140"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Unique values by column (count)</div>
+            <canvas id="uniqueChart" width="500" height="140"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Drift mean delta (numeric)</div>
+            <canvas id="driftChart" width="500" height="140"></canvas>
+          </div>
+        </div>
+        <div class="section-title">Agentic Feedback</div>
+        <div id="agents" class="agents"></div>
+        <div id="issues" class="issues"></div>
+        <div id="ai" class="ai"></div>
+        <details>
+          <summary>Raw JSON report</summary>
+          <div class="json-box">
+            <pre id="output">No report yet.</pre>
+          </div>
+        </details>
+      </div>
+    </div>
+    <footer>Augusto Diaz 2026</footer>
+    <div id="tooltip" class="tooltip"></div>
+    <div id="tableModal" class="modal" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <strong>Dataset Preview</strong>
+          <button id="closeModal" class="btn-secondary">Close</button>
+        </div>
+        <div class="modal-body">
+          <div id="tableContainer">No data loaded.</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const runBtn = document.getElementById("run");
+      const viewTableBtn = document.getElementById("viewTable");
+      const spinner = document.getElementById("spinner");
+      const output = document.getElementById("output");
+      const summary = document.getElementById("summary");
+      const kpis = document.getElementById("kpis");
+      const issues = document.getElementById("issues");
+      const missingChart = document.getElementById("missingChart");
+      const invalidChart = document.getElementById("invalidChart");
+      const outlierChart = document.getElementById("outlierChart");
+      const uniqueChart = document.getElementById("uniqueChart");
+      const driftChart = document.getElementById("driftChart");
+      const agents = document.getElementById("agents");
+      const ai = document.getElementById("ai");
+      const tooltip = document.getElementById("tooltip");
+      const tableModal = document.getElementById("tableModal");
+      const closeModal = document.getElementById("closeModal");
+      const tableContainer = document.getElementById("tableContainer");
+
+      let latestReport = null;
+      let latestDatasetFile = null;
+
+      const apiBase = (() => {
+        const configured = window.APP_CONFIG?.apiBase;
+        if (configured) return configured.replace(/\/$/, "");
+        const { origin, hostname } = window.location;
+        if (hostname === "localhost" || hostname === "127.0.0.1") {
+          return "http://localhost:8000";
+        }
+        return origin;
+      })();
+
+      const formatPct = (value) => `${Math.round(value * 100)}%`;
+
+      const renderKpis = (report) => {
+        const profile = report.profile || {};
+        const schema = report.schema || {};
+        const violations = schema.violations || {};
+        const totalViolations = Object.values(violations).reduce(
+          (sum, v) => sum + (v?.invalid_count || 0),
+          0,
+        );
+        const recCount = report.recommendations?.length || 0;
+        const driftIncluded = report.drift && (report.drift.numeric || report.drift.categorical) ? "Yes" : "No";
+
+        const cards = [
+          { label: "Rows", value: profile.row_count ?? 0 },
+          { label: "Columns", value: profile.column_count ?? 0 },
+          { label: "Schema issues", value: totalViolations },
+          { label: "Recommendations", value: recCount },
+          { label: "Baseline drift", value: driftIncluded },
+        ];
+
+        kpis.innerHTML = cards
+          .map(
+            (card) => `
+              <div class="kpi">
+                <div class="kpi-label">${card.label}</div>
+                <div class="kpi-value">${card.value}</div>
+              </div>
+            `,
+          )
+          .join("");
+      };
+
+      const drawBarChart = (canvas, data, color) => {
+        const ctx = canvas.getContext("2d");
+        const width = canvas.width;
+        const height = canvas.height;
+        ctx.clearRect(0, 0, width, height);
+
+        if (!data.length) return false;
+        const maxValue = Math.max(...data.map((d) => d.value), 0.01);
+        const padding = 10;
+        const barWidth = (width - padding * 2) / data.length;
+
+        ctx.fillStyle = "#0b1424";
+        ctx.fillRect(0, 0, width, height);
+
+        data.forEach((d, i) => {
+          const barHeight = (d.value / maxValue) * (height - 30);
+          const x = padding + i * barWidth;
+          const y = height - barHeight - 18;
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, barWidth * 0.7, barHeight);
+          ctx.fillStyle = "#a8b4c7";
+          ctx.font = "10px system-ui, -apple-system, sans-serif";
+          ctx.fillText(d.label.slice(0, 6), x, height - 6);
+        });
+
+        canvas._chartData = { data, padding, barWidth, height };
+        canvas._chartColor = color;
+        return true;
+      };
+
+      const attachHover = (canvas, formatter) => {
+        if (canvas._hoverAttached) return;
+        canvas._hoverAttached = true;
+        canvas.addEventListener("mousemove", (event) => {
+          const meta = canvas._chartData;
+          if (!meta || !meta.data.length) return;
+          const rect = canvas.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const index = Math.floor((x - meta.padding) / meta.barWidth);
+          if (index < 0 || index >= meta.data.length) {
+            tooltip.style.opacity = "0";
+            return;
+          }
+          const item = meta.data[index];
+          tooltip.textContent = formatter(item);
+          tooltip.style.left = `${event.pageX + 10}px`;
+          tooltip.style.top = `${event.pageY + 10}px`;
+          tooltip.style.opacity = "1";
+        });
+        canvas.addEventListener("mouseleave", () => {
+          tooltip.style.opacity = "0";
+        });
+      };
+
+      const renderCharts = (report) => {
+        const columns = report.profile?.columns || [];
+        const violations = report.schema?.violations || {};
+        const drift = report.drift?.numeric || {};
+
+        const missingData = columns.map((c) => ({
+          label: c.name,
+          value: c.missing_percent || 0,
+        }));
+        const invalidData = columns.map((c) => ({
+          label: c.name,
+          value: violations[c.name]?.invalid_percent || 0,
+        }));
+        const outlierData = columns.map((c) => ({
+          label: c.name,
+          value: c.outlier_count || 0,
+        }));
+        const uniqueData = columns.map((c) => ({
+          label: c.name,
+          value: c.unique_count || 0,
+        }));
+        const driftData = Object.entries(drift).map(([key, value]) => ({
+          label: key,
+          value: Math.abs(value?.mean_delta || 0),
+        }));
+
+        const okMissing = drawBarChart(missingChart, missingData, "#f4b860");
+        const okInvalid = drawBarChart(invalidChart, invalidData, "#7aa2f7");
+        const okOutlier = drawBarChart(outlierChart, outlierData, "#ff7a7a");
+        const okUnique = drawBarChart(uniqueChart, uniqueData, "#7dd3a8");
+        const okDrift = drawBarChart(driftChart, driftData, "#c3a6ff");
+
+        attachHover(missingChart, (item) => `${item.label}: ${formatPct(item.value)}`);
+        attachHover(invalidChart, (item) => `${item.label}: ${formatPct(item.value)}`);
+        attachHover(outlierChart, (item) => `${item.label}: ${item.value} outliers`);
+        attachHover(uniqueChart, (item) => `${item.label}: ${item.value} uniques`);
+        attachHover(driftChart, (item) => `${item.label}: ${item.value.toFixed(2)} mean delta`);
+
+        const chartMap = [
+          { ok: okMissing, id: "missingChart", msg: "No missing data found." },
+          { ok: okInvalid, id: "invalidChart", msg: "No schema violations found." },
+          { ok: okOutlier, id: "outlierChart", msg: "No outliers detected." },
+          { ok: okUnique, id: "uniqueChart", msg: "No uniqueness data available." },
+          { ok: okDrift, id: "driftChart", msg: "No baseline drift data available." },
+        ];
+        chartMap.forEach(({ ok, id, msg }) => {
+          const canvas = document.getElementById(id);
+          const card = canvas?.closest(".chart-card");
+          if (!card) return;
+          let empty = card.querySelector(".chart-empty");
+          if (!ok) {
+            if (!empty) {
+              empty = document.createElement("div");
+              empty.className = "chart-empty";
+              card.appendChild(empty);
+            }
+            empty.textContent = msg;
+            canvas.style.display = "none";
+          } else {
+            if (empty) empty.remove();
+            canvas.style.display = "block";
+          }
+        });
+      };
+
+      const renderIssues = (report) => {
+        const recs = report.recommendations || [];
+        if (!recs.length) {
+          issues.innerHTML = "<strong>Issues</strong><br>No recommendations for this dataset.";
+          return;
+        }
+        const items = recs
+          .map(
+            (rec) =>
+              `<li><strong>${rec.column}</strong>: ${rec.issue.replace("_", " ")} — ${rec.recommendation}</li>`,
+          )
+          .join("");
+        issues.innerHTML = `<strong>Issues & next steps</strong><ul>${items}</ul>`;
+      };
+
+      const renderAiInsights = (report) => {
+        const insights = report.ai_insights || {};
+        if (!insights.status || insights.status !== "ok") {
+          ai.innerHTML =
+            "<h3>AI Insights</h3><div>AI insights are not available. Add an OpenAI API key to enable them.</div>";
+          return;
+        }
+
+        const bullets = insights.summary_bullets || [];
+        const cleaning = insights.cleaning_recipe || "No recipe provided.";
+        const semantic = insights.semantic_types || [];
+        const drift = insights.drift_narrative || "No drift narrative.";
+        const anomaly = insights.anomaly_explanation || "No anomaly explanation.";
+
+        const semanticRows = semantic.length
+          ? semantic
+              .map(
+                (s) =>
+                  `<tr><td>${s.column || ""}</td><td>${s.type || ""}</td><td>${s.confidence || ""}</td><td>${s.rationale || ""}</td></tr>`,
+              )
+              .join("")
+          : `<tr><td colspan="4">No semantic typing suggestions.</td></tr>`;
+
+        ai.innerHTML = `
+          <h3>AI Insights</h3>
+          <div class="ai-section">
+            <strong>Plain-English summary</strong>
+            <ul>${bullets.map((b) => `<li>${b}</li>`).join("") || "<li>No summary.</li>"}</ul>
+          </div>
+          <div class="ai-section">
+            <strong>Cleaning recipe (pandas)</strong>
+            <pre>${cleaning}</pre>
+          </div>
+          <div class="ai-section">
+            <strong>Semantic column types</strong>
+            <table>
+              <thead><tr><th>Column</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead>
+              <tbody>${semanticRows}</tbody>
+            </table>
+          </div>
+          <div class="ai-section">
+            <strong>Drift narrative</strong>
+            <div>${drift}</div>
+          </div>
+          <div class="ai-section">
+            <strong>Anomaly explanation</strong>
+            <div>${anomaly}</div>
+          </div>
+        `;
+      };
+
+      const renderAgents = (report) => {
+        const profile = report.profile || {};
+        const schema = report.schema || {};
+        const drift = report.drift;
+        const recs = report.recommendations || [];
+
+        const profileItems = [];
+        if (profile.row_count != null) profileItems.push(`Rows: ${profile.row_count}`);
+        if (profile.column_count != null) profileItems.push(`Columns: ${profile.column_count}`);
+
+        const schemaIssues = Object.entries(schema.violations || {}).filter(
+          ([, v]) => (v?.invalid_count || 0) > 0,
+        );
+        const schemaBody =
+          schemaIssues.length > 0
+            ? `<ul>${schemaIssues
+                .map(
+                  ([col, v]) =>
+                    `<li><strong>${col}</strong>: ${v.invalid_count} invalid (${formatPct(
+                      v.invalid_percent || 0,
+                    )})</li>`,
+                )
+                .join("")}</ul>`
+            : "No schema violations detected.";
+
+        let driftBody = "Baseline not provided; drift analysis skipped.";
+        if (drift) {
+          const numericCount = Object.keys(drift.numeric || {}).length;
+          const catCount = Object.keys(drift.categorical || {}).length;
+          if (numericCount + catCount === 0) {
+            driftBody = "No drift stats available (check shared columns).";
+          } else {
+            driftBody = `Compared ${numericCount} numeric and ${catCount} categorical columns.`;
+          }
+        }
+
+        const recBody =
+          recs.length > 0
+            ? `<ul>${recs
+                .slice(0, 5)
+                .map((r) => `<li><strong>${r.column}</strong>: ${r.issue.replace("_", " ")}</li>`)
+                .join("")}</ul>`
+            : "No recommendations at this time.";
+
+        agents.innerHTML = `
+          <div class="agent-card">
+            <div class="agent-title">Profiler Agent</div>
+            <div class="agent-sub">Column stats, missingness, ranges, uniques</div>
+            <div class="agent-body">${
+              profileItems.length ? profileItems.join(" · ") : "No profile data available."
+            }</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-title">Schema Validator Agent</div>
+            <div class="agent-sub">Inferred types + invalid value checks</div>
+            <div class="agent-body">${schemaBody}</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-title">Drift Detector Agent</div>
+            <div class="agent-sub">Baseline comparison for shifts</div>
+            <div class="agent-body">${driftBody}</div>
+          </div>
+          <div class="agent-card">
+            <div class="agent-title">Fix Recommender Agent</div>
+            <div class="agent-sub">Suggested cleanup actions</div>
+            <div class="agent-body">${recBody}</div>
+          </div>
+        `;
+      };
+
+      runBtn.addEventListener("click", async () => {
+        const dataset = document.getElementById("dataset").files[0];
+        const baseline = document.getElementById("baseline").files[0];
+
+        if (!dataset) {
+          output.textContent = "Please select a dataset CSV first.";
+          return;
+        }
+
+        runBtn.disabled = true;
+        viewTableBtn.disabled = true;
+        spinner.style.display = "inline-block";
+        output.textContent = "Running analysis...";
+        summary.textContent = "";
+        kpis.innerHTML = "";
+        issues.innerHTML = "";
+        agents.innerHTML = "";
+        ai.innerHTML = "";
+        latestDatasetFile = dataset;
+
+        const form = new FormData();
+        form.append("dataset", dataset);
+        if (baseline) form.append("baseline", baseline);
+
+        try {
+          const res = await fetch(`${apiBase}/api/analyze`, { method: "POST", body: form });
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          const report = await res.json();
+          latestReport = report;
+          summary.textContent = report.summary || "";
+          renderKpis(report);
+          renderCharts(report);
+          renderIssues(report);
+          renderAgents(report);
+          renderAiInsights(report);
+          output.textContent = JSON.stringify(report, null, 2);
+          viewTableBtn.disabled = false;
+        } catch (err) {
+          output.textContent = err.message || "Error running analysis.";
+        } finally {
+          runBtn.disabled = false;
+          spinner.style.display = "none";
+        }
+      });
+
+      const parseCsvPreview = async (file, limit = 20) => {
+        const text = await file.text();
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        if (!lines.length) return { columns: [], rows: [] };
+        const columns = lines[0].split(",");
+        const rows = lines.slice(1, limit + 1).map((line) => {
+          const values = line.split(",");
+          const row = {};
+          columns.forEach((col, i) => {
+            row[col] = values[i] ?? "";
+          });
+          return row;
+        });
+        return { columns, rows };
+      };
+
+      const renderTable = async () => {
+        let rows = latestReport?.sample_rows || [];
+        let columns = latestReport?.sample_columns || [];
+        if (!rows.length && latestDatasetFile) {
+          const preview = await parseCsvPreview(latestDatasetFile);
+          rows = preview.rows;
+          columns = preview.columns;
+        }
+        if (!rows.length) {
+          tableContainer.textContent = "No rows available.";
+          return;
+        }
+        if (!columns.length) {
+          columns = Object.keys(rows[0] || {});
+        }
+        const header = columns.map((c) => `<th>${c}</th>`).join("");
+        const body = rows
+          .map(
+            (row) =>
+              `<tr>${columns
+                .map((c) => `<td>${row[c] === undefined ? "" : row[c]}</td>`)
+                .join("")}</tr>`,
+          )
+          .join("");
+        tableContainer.innerHTML = `<table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+      };
+
+      viewTableBtn.addEventListener("click", async () => {
+        await renderTable();
+        tableModal.classList.add("open");
+        tableModal.setAttribute("aria-hidden", "false");
+      });
+
+      closeModal.addEventListener("click", () => {
+        tableModal.classList.remove("open");
+        tableModal.setAttribute("aria-hidden", "true");
+      });
+
+      tableModal.addEventListener("click", (event) => {
+        if (event.target === tableModal) {
+          tableModal.classList.remove("open");
+          tableModal.setAttribute("aria-hidden", "true");
+        }
+      });
+    </script>
+  </body>
+</html>
