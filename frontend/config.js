@@ -1,3 +1,3 @@
 window.APP_CONFIG = {
-  apiBase: "https://data-quality-guardrails-o-api.vercel.app",
+  apiBase: "https://data-quality-guardrails-api.vercel.app",
 };
