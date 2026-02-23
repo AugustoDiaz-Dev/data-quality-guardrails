@@ -28,9 +28,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_process_time_header(request, call_next):
+    import time
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     import traceback
+    print(f"ERROR: {str(exc)}")
+    print(traceback.format_exc())
     return JSONResponse(
         status_code=500,
         content={
@@ -42,11 +53,9 @@ async def global_exception_handler(request, exc):
 
 pipeline = build_graph()
 
-
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
-
 
 @app.get("/")
 def root():
@@ -57,36 +66,55 @@ def root():
         "health": "/api/health",
     }
 
-
 @app.get("/api")
 def api_root():
     return {"status": "ok"}
-
 
 @app.post("/api/analyze")
 async def analyze(
     dataset: UploadFile = File(...),
     baseline: Optional[UploadFile] = File(None),
 ):
+    print(f"Analyze request received: dataset={dataset.filename}")
     dataset_bytes = await dataset.read()
     baseline_bytes = await baseline.read() if baseline else None
 
     try:
         df = read_csv_bytes(dataset_bytes)
-    except Exception as exc:  # noqa: BLE001
+        print(f"Dataset loaded: {len(df)} rows")
+    except Exception as exc: 
+        print(f"Failed to read dataset: {exc}")
         raise HTTPException(status_code=400, detail=f"Invalid dataset CSV: {exc}") from exc
 
+    baseline_df = None
     if baseline_bytes:
         try:
             baseline_df = read_csv_bytes(baseline_bytes)
-        except Exception as exc:  # noqa: BLE001
+            print(f"Baseline loaded: {len(baseline_df)} rows")
+        except Exception as exc:
+            print(f"Failed to read baseline: {exc}")
             raise HTTPException(status_code=400, detail=f"Invalid baseline CSV: {exc}") from exc
-    else:
-        baseline_df = None
 
-    result = pipeline.invoke({"dataset": df, "baseline": baseline_df, "report": {}})
-    report = result["report"]
+    print("Running pipeline...")
+    try:
+        result = pipeline.invoke({"dataset": df, "baseline": baseline_df, "report": {}})
+        report = result["report"]
+    except Exception as exc:
+        print(f"Pipeline error: {exc}")
+        raise exc
+
+    print("Generating AI insights...")
+    try:
+        report["ai_insights"] = generate_ai_insights(report)
+    except Exception as exc:
+        print(f"AI insights error: {exc}")
+        report["ai_insights"] = {"status": "error", "reason": str(exc)}
+
     report["sample_columns"] = list(df.columns)
-    report["sample_rows"] = df.head(20).to_dict(orient="records")
-    report["ai_insights"] = generate_ai_insights(report)
-    return JSONResponse(report)
+    # Handle NaNs for JSON serialization
+    sample_df = df.head(20).replace({np.nan: None})
+    report["sample_rows"] = sample_df.to_dict(orient="records")
+    
+    print("Analysis complete.")
+    from fastapi.encoders import jsonable_encoder
+    return JSONResponse(content=jsonable_encoder(report))
